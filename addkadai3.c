@@ -42,6 +42,65 @@ unsigned int hash_function(char *gene1){
     }
     return hash_val%gene_number;
 }
+typedef struct hash{
+    char gene[300];
+    char GO[100][100];
+    struct hash *next;
+    int N_GO;
+}GENE_GO;
+
+typedef struct {
+    GENE_GO **hashtable;
+}HASH;
+
+void inithashtable(HASH *h1) {
+    int n;
+    h1->hashtable = (GENE_GO **) malloc(sizeof(GENE_GO *) * gene_number);
+    for (n = 0; n < gene_number; ++n) {
+        h1->hashtable[n] = NULL;
+    }
+}
+
+void init_GENE_GO(GENE_GO *G){
+    int i,j,n;
+    G->N_GO=0;
+    for ( i = 0; i <100 ; ++i) {
+        for ( j = 0; j <100 ; ++j) {
+            G->GO[i][j] = '\0';
+        }
+    }
+    for(n=0;n<300;n++){
+        G->gene[n] ='\0';
+    }
+}
+
+void add_to_GENEGO_table(char*gene1, char*GO1,HASH *h1){
+    unsigned int n = hash_function(gene1);
+    GENE_GO *p;
+    GENE_GO *p2=h1->hashtable[n];
+    int i;
+    while(p2 != NULL){
+        if(!strcmp(p2->gene,gene1)){
+            for (i = 0; i <p2->N_GO ; i++) {
+                if(!strcmp(p2->GO[i],GO1)){
+                    return;
+                }
+            }
+            strcpy(p2->GO[p2->N_GO],GO1);
+            p2->N_GO++;
+            return;
+        }
+        p2=p2->next;
+    }
+    p=(GENE_GO *)malloc(sizeof(GENE_GO));
+    init_GENE_GO(p);
+    strcpy(p->gene,gene1);
+    strcpy(p->GO[p->N_GO],GO1);
+    p->N_GO++;
+    p->next=h1->hashtable[n];
+    h1->hashtable[n]=p;
+}
+
 //GOを格納する
 typedef struct hash4{
     char GO[100];
@@ -82,11 +141,10 @@ typedef struct hash3{
     int total_N_GO;
     struct hash3 *next;
 }TOTAL_GO_COUNT;
-
 typedef struct {
     TOTAL_GO_COUNT **hashtable;
 }HASH_TOTAL_GO_COUNT;
-void inithashtable(HASH_TOTAL_GO_COUNT *h1) {
+void init_hashtablefunction(HASH_TOTAL_GO_COUNT *h1) {
     int n;
     h1->hashtable = (TOTAL_GO_COUNT **) malloc(sizeof(TOTAL_GO_COUNT*) * gene_number);
     for (n = 0; n < gene_number; ++n) {
@@ -124,16 +182,22 @@ void init_TOTAL_GO_COUNT(TOTAL_GO_COUNT *pHash3) {
     pHash3->total_N_GO=0;
 }
 int main(){
-    char line[1000];
-    char column1[40][300];
-    FILE *cluster,*gene_association;
-    if((gene_association=fopen("gene_association.txt","r"))==NULL){
-        printf("cant open infile");
+    char row[2000];
+    char column[40][300];
+    HASH h;
+    FILE *IN;
+    if((IN=fopen("gene_association.sgd","r"))==NULL){
+        printf("cantopen1\n");
         exit(1);
     }
+    inithashtable(&h);
     do{
-        fgets(line,2000,gene_association);
-        split(line,column1);
+        fgets(row,2000,IN);
+        split(row,column);
+        if(column[8][0]=='P'){
+            add_to_GENEGO_table(column[10],column[4],&h);
+        }
+    }while (!feof(IN));
+    fclose(IN);
 
-    }while (!feof(gene_association));
 }

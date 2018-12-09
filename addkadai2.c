@@ -135,23 +135,23 @@ void printstructure(HASH *h1){
    }
    fclose(OUT);
 }
-int main(){
+int main() {
     char row[2000];
     char column[40][300];
     HASH h;
     FILE *IN;
-    if((IN=fopen("gene_association.sgd","r"))==NULL){
+    if ((IN = fopen("gene_association.sgd", "r")) == NULL) {
         printf("cantopen1\n");
         exit(1);
     }
     inithashtable(&h);
-    do{
-        fgets(row,2000,IN);
-        split(row,column);
-        if(column[8][0]=='P'){
-            add_to_GENEGO_table(column[10],column[4],&h);
+    do {
+        fgets(row, 2000, IN);
+        split(row, column);
+        if (column[8][0] == 'P') {
+            add_to_GENEGO_table(column[10], column[4], &h);
         }
-    }while (!feof(IN));
+    } while (!feof(IN));
     fclose(IN);
     printstructure(&h);
 }
